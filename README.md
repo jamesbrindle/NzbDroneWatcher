@@ -9,15 +9,15 @@ This is a Windows services that watches NzbDrone services, such as:
 This solution is specific to my use case, so alter for your own scenario, but basically, I have two 'Radarr' instances - Using the same exe process, but pointing at different 
 paths and using NSSM in order to have multiple Radarr 'instances'.
 
-It works fine having two Radarr instances this way (using NSSM - without the need for Docker - Which I ended up removing due it Docker popping up with error everytime I shut down Windows) but 
+It works fine having two Radarr instances this way (using NSSM (Non-Sucking Service Manager) - without the need for Docker - Which I ended up removing due it Docker popping up with error everytime I shut down Windows) but 
 every now and again, one of the Radarr services would fail and stop. There's just something that causing this that I can't work out...
 
-So as a workaround, I elected to just create a quick Windows services that watches the NZB Done services and start them if they're down.
+So as a workaround I elected to just create a quick Windows services that watches the NZB Done services and start them if they're down.
 
 The usual Windows 'Recovery' options don't appear to be a solution to this issue, because, for some reason it's required that the original 'Radarr' services (not the one using NSSM) needs
 to be started up first... So this Windows service would first stop Radarr-4K (using NSSM) and then start up Radarr (original) then start up Radarr-4K (NSSM) again.
 
-While I were at it, I also made this watch my other NZB Drone services (Sonarr and Lidarr) just in case those went down.
+While I were at it I also made this watch my other NZB Drone services (Sonarr and Lidarr) just in case those went down.
 
 ##  NZB Drone Service List
 
@@ -47,3 +47,15 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319>InstallUtil.exe "c:\Utilities\Nz
 ```
 
 You can change certain properties by default of the service in the 'Designer View' of class 'ProjectInstaller.cs'.
+
+## What is NSSM?
+
+**Non-Sucking Service Manger**
+
+For my uses, it's a very easy way to create multiple services in Windows based off the same executable.
+
+https://nssm.cc/
+
+
+
+
