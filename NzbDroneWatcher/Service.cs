@@ -38,6 +38,11 @@ namespace NzbDroneWatcher
 
         private static void OnTimedEvent(object source, ElapsedEventArgs e)
         {
+            CheckAndRestartNzbServices();
+        }
+
+        private static void CheckAndRestartNzbServices()
+        {
             foreach (var serviceItem in Program.ServiceItems)
             {
                 var serviceController = new ServiceController(serviceItem.ServiceName, "localhost");
