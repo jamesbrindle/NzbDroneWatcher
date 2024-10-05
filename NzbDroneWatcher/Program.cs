@@ -12,7 +12,7 @@ namespace NzbDroneWatcher
         public static void Main()
         {
             // DEBUG
-            //new Service().Test();
+            // new Service().Test();
 
             ServiceBase[] ServicesToRun;
             ServicesToRun = new ServiceBase[]

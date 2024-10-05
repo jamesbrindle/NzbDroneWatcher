@@ -31,11 +31,16 @@ namespace NzbDroneWatcher
             timer.Elapsed += new ElapsedEventHandler(OnTimedEvent);
 
             if (args != null && args.Length > 0 && !string.IsNullOrWhiteSpace(args[0]) && args[0] == "test")
-                timer.Interval = 60000; // 60 seconds
+            {
+                timer.Interval = 10000; // 10 seconds
+                timer.AutoReset = false;
+            }
             else
+            {
                 timer.Interval = Program.IntervalMinutes * 60 * 1000;
+                timer.AutoReset = true;
+            }
 
-            timer.AutoReset = true;
             timer.Enabled = true;
             timer.Start();
         }
@@ -134,9 +139,6 @@ namespace NzbDroneWatcher
                     }
                 }
 
-
-                Thread.Sleep(30000); // 30 seconds
-
                 CheckAndEmailOfAnyError(serviceItem);
             }
         }
@@ -145,20 +147,27 @@ namespace NzbDroneWatcher
         {
             if (!string.IsNullOrEmpty(serviceItem.AppUrl))
             {
-                using (HttpClient client = new HttpClient())
+                if (serviceItem.LastEmailDateTime == null || DateTime.Now.Day != ((DateTime)serviceItem.LastEmailDateTime).Day)
                 {
-                    try
-                    {
-                        HttpResponseMessage response = Task.Run(() => client.GetAsync(serviceItem.AppUrl)).Result;
+                    Thread.Sleep(30000); // 30 seconds
 
-                        if (response.IsSuccessStatusCode)
-                            Console.WriteLine($"{serviceItem.AppUrl} is up and running.");
-                        else
-                            SendEmailNotification(serviceItem.AppUrl, serviceItem.ServiceName);
-                    }
-                    catch
+                    using (HttpClient client = new HttpClient())
                     {
-                        SendEmailNotification(serviceItem.AppUrl, serviceItem.ServiceName);
+                        try
+                        {
+                            HttpResponseMessage response = Task.Run(() => client.GetAsync(serviceItem.AppUrl)).Result;
+
+                            if (!response.IsSuccessStatusCode)
+                            {
+                                SendEmailNotification(serviceItem.AppUrl, serviceItem.ServiceName);
+                                serviceItem.LastEmailDateTime = DateTime.Now;
+                            }
+                        }
+                        catch
+                        {
+                            SendEmailNotification(serviceItem.AppUrl, serviceItem.ServiceName);
+                            serviceItem.LastEmailDateTime = DateTime.Now;
+                        }
                     }
                 }
             }
