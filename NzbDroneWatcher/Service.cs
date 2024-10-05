@@ -1,8 +1,12 @@
-﻿using System.ServiceProcess;
-using System.Timers;
-using System.Threading;
+﻿using NzbDroneWatcher.Objects;
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Mail;
+using System.ServiceProcess;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Timers;
 
 namespace NzbDroneWatcher
 {
@@ -128,6 +132,68 @@ namespace NzbDroneWatcher
                                 Console.Out.WriteLine(ex.Message);
                         }
                     }
+                }
+
+
+                Thread.Sleep(30000); // 30 seconds
+
+                CheckAndEmailOfAnyError(serviceItem);
+            }
+        }
+
+        private static void CheckAndEmailOfAnyError(ServiceItem serviceItem)
+        {
+            if (!string.IsNullOrEmpty(serviceItem.AppUrl))
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    try
+                    {
+                        HttpResponseMessage response = Task.Run(() => client.GetAsync(serviceItem.AppUrl)).Result;
+
+                        if (response.IsSuccessStatusCode)
+                            Console.WriteLine($"{serviceItem.AppUrl} is up and running.");
+                        else
+                            SendEmailNotification(serviceItem.AppUrl, serviceItem.ServiceName);
+                    }
+                    catch
+                    {
+                        SendEmailNotification(serviceItem.AppUrl, serviceItem.ServiceName);
+                    }
+                }
+            }
+        }
+
+        private static void SendEmailNotification(string websiteUrl, string serviceName)
+        {
+            // Set up the email details
+            string smtpAddress = Program.EmailSmtp;
+            int portNumber = Program.EmailPort;
+            bool enableSSL = Program.EmailSsl;
+            string emailFrom = Program.EmailFrom;
+            string password = Program.EmailPassword;
+            string emailTo = Program.EmailTo;
+            string subject = $"NZB Drone Watcher: {serviceName} Down!";
+            string body = $"<b>NZB Drone Watcher</b><br /><br />The website {websiteUrl} appears to be down. Check the issue.<br /><br />";
+
+            using (MailMessage mail = new MailMessage())
+            {
+                mail.From = new MailAddress(emailFrom);
+                mail.To.Add(emailTo);
+                mail.Subject = subject;
+                mail.Body = body;
+                mail.IsBodyHtml = true;
+
+                using (SmtpClient smtp = new SmtpClient(smtpAddress, portNumber))
+                {
+                    smtp.Credentials = new System.Net.NetworkCredential(emailFrom, password);
+                    smtp.EnableSsl = enableSSL;
+                    try
+                    {
+                        smtp.Send(mail);
+                    }
+                    catch
+                    { }
                 }
             }
         }

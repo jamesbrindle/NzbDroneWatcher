@@ -39,14 +39,23 @@ namespace NzbDroneWatcher
             get
             {
                 var list = new List<ServiceItem>();
-                var serviceArray = ConfigurationManager.AppSettings["ServicesToWatch"].Split(';');
+                var serviceArray = ConfigurationManager.AppSettings["ServicesToWatch"].Split('|');
 
                 foreach (var item in serviceArray)
                 {
                     if (!string.IsNullOrWhiteSpace(item))
                     {
-                        var serviceProcess = item.Replace("[", "").Replace("]", "").Split(':');
+                        var serviceProcess = item.Replace("[", "").Replace("]", "").Split(';');
 
+                        if (serviceProcess != null && serviceProcess.Count() == 3)
+                        {
+                            list.Add(new ServiceItem
+                            {
+                                ServiceName = serviceProcess[0],
+                                ProcessName = serviceProcess[1],
+                                AppUrl = serviceProcess[2]
+                            });
+                        }
                         if (serviceProcess != null && serviceProcess.Count() == 2)
                         {
                             list.Add(new ServiceItem
@@ -67,6 +76,64 @@ namespace NzbDroneWatcher
             get
             {
                 return Convert.ToInt32(ConfigurationManager.AppSettings["IntervalMinutes"]);
+            }
+        }
+
+        public static string EmailSmtp
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["EmailSmtp"];
+            }
+        }
+
+        public static int EmailPort
+        {
+            get
+            {
+                return Convert.ToInt32(ConfigurationManager.AppSettings["EmailPort"]);
+            }
+        }
+
+        public static bool EmailSsl
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["EmailSsl"].ToLower() == "yes" ||
+                       ConfigurationManager.AppSettings["EmailSsl"].ToLower() == "true"
+                            ? true
+                            : false;
+            }
+        }
+
+        public static string EmailUserName
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["EmailUserName"];
+            }
+        }
+
+        public static string EmailPassword
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["EmailPassword"];
+            }
+        }
+        public static string EmailFrom
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["EmailFrom"];
+            }
+        }
+
+        public static string EmailTo
+        {
+            get
+            {
+                return ConfigurationManager.AppSettings["EmailTo"];
             }
         }
     }
